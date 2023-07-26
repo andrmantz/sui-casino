@@ -204,7 +204,7 @@ module casino::implements {
         assert!(tx_context::epoch(ctx) > ticket.epoch, ERR_TOO_EARLY);
         let Ticket {id, bet_number, value, epoch} = ticket;
         
-        let bet_winnings = winnings<X>(casino, bet_number, epoch, value);
+        let bet_winnings = winnings(casino, bet_number, epoch, value);
         let pool = get_mut_pool<X>(casino);
 
         object::delete(id);
@@ -212,7 +212,7 @@ module casino::implements {
 
     }
 
-    public fun winnings<X>(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
+    public fun winnings(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
 
         let lucky_number = vec_map::get<u64, u64>(&casino.lucky_numbers,  &epoch);
 

@@ -11,6 +11,7 @@ module casino::oracle {
     const ERR_ALREADY_SET: u64 = 502;
     const ERR_WRONG_NUMBER: u64 = 503;
 
+
     struct LuckyNumberSet has copy, drop {
         casino: ID,
         epoch: u64,
@@ -26,10 +27,12 @@ module casino::oracle {
 
         assert!(implements::set_lucky_number(casino, lucky_number, previous_epoch), ERR_ALREADY_SET);
 
-        emit(LuckyNumberSet {
-            casino: implements::casino_id(casino),
-            epoch: previous_epoch,
-            lucky_number: lucky_number
-        });
+        emit(
+            LuckyNumberSet {
+                casino: implements::casino_id(casino),
+                epoch: previous_epoch,
+                lucky_number: lucky_number
+            }
+        );
     } 
 }
