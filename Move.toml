@@ -1,0 +1,10 @@
+[package]
+name = "casino"
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/testnet" }
+
+[addresses]
+casino = "0x0"
+oracle = "0x1c068d3ec92941af58eadd6fd2ef5dbaca37c3bd4579d964ba9270150504c618"
