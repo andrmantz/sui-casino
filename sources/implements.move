@@ -15,14 +15,14 @@ module casino::implements {
 
     const MINUMUM_LIQUIDITY: u64 = 1_000;
     
-    const ERR_ZERO_AMOUNT: u64 = 100;
-    const ERR_INSUFFICIENT_LIQUIDITY_MINTED: u64 = 101;
-    const ERR_INSUFFICIENT_LIQUIDITY_BURNED: u64 = 102;
-    const ERR_ZERO_LIQUIDITY_MINTED: u64 = 103;
-    const ERR_POOL_NOT_EXISTS: u64 = 104;
-    const ERR_POOL_EXISTS: u64 = 105;
-    const ERR_TOO_EARLY: u64 = 106;
-    const ERR_TOO_LATE: u64 = 107;
+    const ERR_ZERO_AMOUNT: u64 = 200;
+    const ERR_INSUFFICIENT_LIQUIDITY_MINTED: u64 = 201;
+    const ERR_INSUFFICIENT_LIQUIDITY_BURNED: u64 = 202;
+    const ERR_ZERO_LIQUIDITY_MINTED: u64 = 203;
+    const ERR_POOL_NOT_EXISTS: u64 = 204;
+    const ERR_POOL_EXISTS: u64 = 205;
+    const ERR_TOO_EARLY: u64 = 206;
+    const ERR_TOO_LATE: u64 = 207;
 
 
 

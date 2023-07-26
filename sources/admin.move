@@ -5,8 +5,8 @@ module casino::admin {
 
     use casino::implements::{Self, Casino, AdminCap};
     
-    const ERR_ALREADY_PAUSED: u64 = 400;
-    const ERR_NOT_PAUSED: u64 = 401;
+    const ERR_ALREADY_PAUSED: u64 = 300;
+    const ERR_NOT_PAUSED: u64 = 301;
 
     struct CasinoPaused has copy, drop {
         casino: ID,

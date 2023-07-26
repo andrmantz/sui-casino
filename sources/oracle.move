@@ -6,10 +6,10 @@ module casino::oracle {
 
     use casino::implements::{Self, Casino};
     
-    const ERR_ONLY_ORACLE: u64 = 500;
-    const ERR_PAUSED: u64 = 501;
-    const ERR_ALREADY_SET: u64 = 502;
-    const ERR_WRONG_NUMBER: u64 = 503;
+    const ERR_ONLY_ORACLE: u64 = 400;
+    const ERR_PAUSED: u64 = 401;
+    const ERR_ALREADY_SET: u64 = 402;
+    const ERR_WRONG_NUMBER: u64 = 403;
 
 
     struct LuckyNumberSet has copy, drop {
