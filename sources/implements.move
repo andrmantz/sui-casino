@@ -11,6 +11,7 @@ module casino::implements {
     
     friend casino::oracle;
     friend casino::admin;
+    friend casino::interface;
 
     const MINUMUM_LIQUIDITY: u64 = 1_000;
     
@@ -41,7 +42,7 @@ module casino::implements {
         lucky_numbers: VecMap<u64, u64>
     }
 
-    struct Ticket<phantom X> has key {
+    struct Ticket<phantom X> has key, store {
         id: UID,
         bet_number: u64,
         epoch: u64,
@@ -80,6 +81,10 @@ module casino::implements {
 
     public fun paused(casino: &mut Casino) : bool {
         casino.is_paused
+    }
+
+    public fun ticket_id<X>(ticket: &Ticket<X>): ID {
+        object::uid_to_inner(&ticket.id)    
     }
 
     public(friend) fun modify_admin(admincap: AdminCap, new_admin: address){
@@ -139,39 +144,45 @@ module casino::implements {
     }
 
 
-    public(friend) fun add_liquidity<X>(pool: &mut Pool<X>, coin_in: Coin<X>, out_min: u64, ctx: &mut TxContext): Coin<LP<X>> {
+    public(friend) fun add_liquidity<X>(pool: &mut Pool<X>, coin_in: Coin<X>, out_min: u64, ctx: &mut TxContext): (Coin<LP<X>>, u64) {
         let coin_value = coin::value(&coin_in);
         assert!(coin_value > 0, ERR_ZERO_AMOUNT);
 
         let (reserves, lp_supply) = get_reserves(pool);
                 
-        let liquidity_inserted = if (lp_supply == 0){
+        let liquidity_added = if (lp_supply == 0){
 
             coin_value
         } else {
             coin_value * lp_supply / reserves
         };
 
-        assert!(liquidity_inserted > 0, ERR_ZERO_LIQUIDITY_MINTED);
-        assert!(liquidity_inserted > out_min, ERR_INSUFFICIENT_LIQUIDITY_MINTED);
+        assert!(liquidity_added > 0, ERR_ZERO_LIQUIDITY_MINTED);
+        assert!(liquidity_added > out_min, ERR_INSUFFICIENT_LIQUIDITY_MINTED);
                 
         balance::join(&mut pool.reserves, coin::into_balance(coin_in));
-        let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_inserted);
+        let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_added);
 
-        coin::from_balance(balance, ctx)
+        (
+            coin::from_balance(balance, ctx),
+            liquidity_added
+        )
     }
 
-    public(friend) fun remove_liquidity<X>(pool: &mut Pool<X>, lp_coin: Coin<LP<X>>, out_min: u64,ctx: &mut TxContext): Coin<X> {
+    public(friend) fun remove_liquidity<X>(pool: &mut Pool<X>, lp_coin: Coin<LP<X>>, out_min: u64,ctx: &mut TxContext): (Coin<X>, u64) {
         let lp_coin_value = coin::value(&lp_coin);
         assert!(lp_coin_value > 0, ERR_ZERO_AMOUNT);
         let (reserves, lp_supply) = get_reserves(pool);
 
-        let coin_out = reserves * lp_coin_value / lp_supply;
+        let coin_out_amount = reserves * lp_coin_value / lp_supply;
 
-        assert!(coin_out > out_min, ERR_INSUFFICIENT_LIQUIDITY_BURNED);
+        assert!(coin_out_amount > out_min, ERR_INSUFFICIENT_LIQUIDITY_BURNED);
                 
         balance::decrease_supply(&mut pool.lp_supply, coin::into_balance(lp_coin));
-        coin::take(&mut pool.reserves, coin_out, ctx)
+        (
+            coin::take(&mut pool.reserves, coin_out_amount, ctx),
+            coin_out_amount
+        )
 
     }
 
@@ -186,21 +197,24 @@ module casino::implements {
 
     // Casino-lottery related functions
 
-    public(friend) fun create_bet<X>(pool: &mut Pool<X>, coin_in: Coin<X>, bet_number: u64, ctx: &mut TxContext): Ticket<X>{
+    public(friend) fun create_bet<X>(pool: &mut Pool<X>, coin_in: Coin<X>, bet_number: u64, ctx: &mut TxContext): ( Ticket<X>, u64) {
 
         let coin_value = coin::value(&coin_in);
         assert!(coin_value > 0, ERR_ZERO_AMOUNT);
         balance::join(&mut pool.reserves, coin::into_balance(coin_in));
         
-        Ticket {
+        (
+            Ticket {
             id: object::new(ctx),
             bet_number: bet_number,
             epoch: tx_context::epoch(ctx),
             value: coin_value
-        }
+            },
+            coin_value
+        )
     }
 
-    public(friend) fun redeem_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): Coin<X> {
+    public(friend) fun redeem_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): (Coin<X>, u64) {
         
         assert!(tx_context::epoch(ctx) > ticket.epoch, ERR_TOO_EARLY);
         let Ticket {id, bet_number, value, epoch} = ticket;
@@ -218,12 +232,15 @@ module casino::implements {
             bet_winnings
         };
         
-        coin::take(&mut pool.reserves, coins_out, ctx)
+        (
+            coin::take(&mut pool.reserves, coins_out, ctx),
+            coins_out
+        )
 
     }
     
     /// @notice cancel bet and return half of the paid amount back
-    public(friend) fun cancel_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): Coin<X> {
+    public(friend) fun cancel_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): (Coin<X>, u64) {
         
         let Ticket {id, bet_number: _, value, epoch} = ticket;
         assert!(tx_context::epoch(ctx) <= epoch, ERR_TOO_LATE);
@@ -231,7 +248,12 @@ module casino::implements {
         let pool = get_mut_pool<X>(casino);
 
         object::delete(id);
-        coin::take(&mut pool.reserves, value / 2, ctx)
+        let value_out = value / 2;
+        (
+            coin::take(&mut pool.reserves, value_out, ctx),
+            value_out
+        )
+
     }
 
     public fun winnings(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
