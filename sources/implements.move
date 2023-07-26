@@ -157,7 +157,11 @@ module casino::implements {
             
             // mint dead shares to not worry too much about inflation attacks
             assert!(coin_value > MINUMUM_LIQUIDITY, ERR_LIQUIDITY_NOT_ENOUGH);
-            balance::increase_supply(&mut pool.lp_supply, MINUMUM_LIQUIDITY);
+            let dead_shares = balance::increase_supply(&mut pool.lp_supply, MINUMUM_LIQUIDITY);
+            transfer::public_transfer(
+                coin::from_balance(dead_shares, ctx),
+                @burn
+            );
             coin_value - MINUMUM_LIQUIDITY
         } else {
             coin_value * lp_supply / reserves
