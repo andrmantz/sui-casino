@@ -21,6 +21,7 @@ module casino::implements {
     const ERR_POOL_NOT_EXISTS: u64 = 104;
     const ERR_POOL_EXISTS: u64 = 105;
     const ERR_TOO_EARLY: u64 = 106;
+    const ERR_TOO_LATE: u64 = 107;
 
 
 
@@ -208,8 +209,29 @@ module casino::implements {
         let pool = get_mut_pool<X>(casino);
 
         object::delete(id);
-        coin::take(&mut pool.reserves, bet_winnings, ctx)
 
+        let (reserves, _) = get_reserves(pool);
+        
+        let coins_out = if (bet_winnings > reserves){
+            reserves
+        } else {
+            bet_winnings
+        };
+        
+        coin::take(&mut pool.reserves, coins_out, ctx)
+
+    }
+    
+    /// @notice cancel bet and return half of the paid amount back
+    public(friend) fun cancel_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): Coin<X> {
+        
+        let Ticket {id, bet_number: _, value, epoch} = ticket;
+        assert!(tx_context::epoch(ctx) <= epoch, ERR_TOO_LATE);
+        
+        let pool = get_mut_pool<X>(casino);
+
+        object::delete(id);
+        coin::take(&mut pool.reserves, value / 2, ctx)
     }
 
     public fun winnings(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
