@@ -14,7 +14,15 @@ module casino::implements {
 
     const MINUMUM_LIQUIDITY: u64 = 1_000;
     
-    const ERR_ZERO_AMOUNT: u64 = 0;
+    const ERR_ZERO_AMOUNT: u64 = 100;
+    const ERR_INSUFFICIENT_LIQUIDITY_MINTED: u64 = 101;
+    const ERR_INSUFFICIENT_LIQUIDITY_BURNED: u64 = 102;
+    const ERR_ZERO_LIQUIDITY_MINTED: u64 = 103;
+    const ERR_POOL_NOT_EXISTS: u64 = 104;
+    const ERR_POOL_EXISTS: u64 = 105;
+    const ERR_TOO_EARLY: u64 = 106;
+
+
 
     struct LP<phantom X> has drop, store {}
 
@@ -98,7 +106,7 @@ module casino::implements {
     ): &mut Pool<X> {
         let lp_name = get_pool_name<X>();
         let exists = bag::contains_with_type<String, Pool<X>>(&casino.pools, lp_name);
-        assert!(exists, 3);
+        assert!(exists, ERR_POOL_NOT_EXISTS);
 
         bag::borrow_mut<String, Pool<X>>(&mut casino.pools, lp_name)
     }
@@ -115,9 +123,8 @@ module casino::implements {
 
     public(friend) fun create_pool<X>(casino: &mut Casino) {
 
-        assert!(!pool_exists<X>(casino), 3);
+        assert!(!pool_exists<X>(casino), ERR_POOL_EXISTS);
         let pool_name = get_pool_name<X>();
-        // assert!(!bag::contains_with_type<String, Pool<X>>(&casino.pools, pool_name), 3);
 
         let lp_supply = balance::create_supply(LP<X> {});
         let new_pool = Pool {
@@ -144,8 +151,8 @@ module casino::implements {
             coin_value * lp_supply / reserves
         };
 
-        assert!(liquidity_inserted > 0, 1);
-        assert!(liquidity_inserted > out_min, 2);
+        assert!(liquidity_inserted > 0, ERR_ZERO_LIQUIDITY_MINTED);
+        assert!(liquidity_inserted > out_min, ERR_INSUFFICIENT_LIQUIDITY_MINTED);
                 
         balance::join(&mut pool.reserves, coin::into_balance(coin_in));
         let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_inserted);
@@ -160,9 +167,7 @@ module casino::implements {
 
         let coin_out = reserves * lp_coin_value / lp_supply;
 
-
-        assert!(coin_out > 0, 1);
-        assert!(coin_out > out_min, 2);
+        assert!(coin_out > out_min, ERR_INSUFFICIENT_LIQUIDITY_BURNED);
                 
         balance::decrease_supply(&mut pool.lp_supply, coin::into_balance(lp_coin));
         coin::take(&mut pool.reserves, coin_out, ctx)
@@ -196,7 +201,7 @@ module casino::implements {
 
     public(friend) fun redeem_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): Coin<X> {
         
-        assert!(tx_context::epoch(ctx) > ticket.epoch, 55);
+        assert!(tx_context::epoch(ctx) > ticket.epoch, ERR_TOO_EARLY);
         let bet_winnings = winnings<X>(casino, ticket);
         let pool = get_mut_pool<X>(casino);
 
