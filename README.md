@@ -53,6 +53,5 @@ The oracle is responsible to provide the lucky numbers selected in the smart con
 
 - Liquidity providers can withdraw their shares right after bets are placed, or even frontrun the oracle, and get away with extra coins, while casino players are not able to earn any as bets are not yet finalized. I may or may not mitigate this vulnerability in the future. A possible solution would be to timelock the LPs coins, but doesn't completely patch the vulnerability.
 - Vaults may lack liquidity in a way that players cannot redeem their earnings, so end up losing coins. The values returned by the `get_multiplier` function are random.
-- Inflation attack in `add_liquidity` has not been fully mitigated and it's still possible as a sort of griefing.
 - The test coverage is minimal, thus there could be a number of uncaught bugs. I plan to add tests and verify the correctness in the short term.
 - Centralization risk, both by the admin and by the oracle roles.
