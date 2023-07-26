@@ -14,6 +14,8 @@ module casino::implements {
     friend casino::interface;
 
     const MINUMUM_LIQUIDITY: u64 = 1_000;
+    // random.
+    const MAX_POOL_VALUE: u64 = 18446744073709551615 / 100_000_000;
     
     const ERR_ZERO_AMOUNT: u64 = 200;
     const ERR_INSUFFICIENT_LIQUIDITY_MINTED: u64 = 201;
@@ -24,6 +26,7 @@ module casino::implements {
     const ERR_TOO_EARLY: u64 = 206;
     const ERR_TOO_LATE: u64 = 207;
     const ERR_LIQUIDITY_NOT_ENOUGH: u64 = 208;
+    const ERR_MAXIMUM_LIQUIDITY_REACHED: u64 = 209;
 
 
 
@@ -95,7 +98,6 @@ module casino::implements {
     public(friend) fun modify_oracle(casino: &mut Casino, new_oracle: address){
         casino.oracle = new_oracle;
     }
-    
 
     public(friend) fun pause(casino: &mut Casino) {
         casino.is_paused = true
@@ -164,7 +166,10 @@ module casino::implements {
         assert!(liquidity_added > 0, ERR_ZERO_LIQUIDITY_MINTED);
         assert!(liquidity_added > out_min, ERR_INSUFFICIENT_LIQUIDITY_MINTED);
                 
-        balance::join(&mut pool.reserves, coin::into_balance(coin_in));
+        let new_balance = balance::join(&mut pool.reserves, coin::into_balance(coin_in));
+
+        assert!(new_balance < MAX_POOL_VALUE, ERR_MAXIMUM_LIQUIDITY_REACHED);
+
         let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_added);
 
         (
@@ -258,7 +263,6 @@ module casino::implements {
             coin::take(&mut pool.reserves, value_out, ctx),
             value_out
         )
-
     }
 
     public fun winnings(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
@@ -268,7 +272,7 @@ module casino::implements {
         get_multiplier(bet_number, *lucky_number) * value
     }
 
-    fun get_multiplier(bet_number: u64, lucky_number: u64): u64 {
+    public fun get_multiplier(bet_number: u64, lucky_number: u64): u64 {
         let i = 0;
         while ( i < 7){
             if (bet_number % 10 != lucky_number % 10)
