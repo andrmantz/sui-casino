@@ -55,7 +55,7 @@ module casino::admin {
         );
     }
 
-        public entry fun modify_oracle(_: &AdminCap, casino: &mut Casino, new_oracle:address){
+    public entry fun modify_oracle(_: &AdminCap, casino: &mut Casino, new_oracle:address){
         implements::modify_oracle(casino, new_oracle);
         
         emit(

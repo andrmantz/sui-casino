@@ -132,40 +132,40 @@ module casino::implements {
 
 
     public(friend) fun add_liquidity<X>(pool: &mut Pool<X>, coin_in: Coin<X>, out_min: u64, ctx: &mut TxContext): Coin<LP<X>> {
-                let coin_value = coin::value(&coin_in);
-                assert!(coin_value > 0, ERR_ZERO_AMOUNT);
+        let coin_value = coin::value(&coin_in);
+        assert!(coin_value > 0, ERR_ZERO_AMOUNT);
 
-                let (reserves, lp_supply) = get_reserves(pool);
+        let (reserves, lp_supply) = get_reserves(pool);
                 
-                let liquidity_inserted = if (lp_supply == 0){
-                    coin_value
-                } else {
-                    coin_value * lp_supply / reserves
-                };
+        let liquidity_inserted = if (lp_supply == 0){
 
-                assert!(liquidity_inserted > 0, 1);
-                assert!(liquidity_inserted > out_min, 2);
+            coin_value
+        } else {
+            coin_value * lp_supply / reserves
+        };
+
+        assert!(liquidity_inserted > 0, 1);
+        assert!(liquidity_inserted > out_min, 2);
                 
-                balance::join(&mut pool.reserves, coin::into_balance(coin_in));
-                let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_inserted);
+        balance::join(&mut pool.reserves, coin::into_balance(coin_in));
+        let balance = balance::increase_supply(&mut pool.lp_supply, liquidity_inserted);
 
-                coin::from_balance(balance, ctx)
-
+        coin::from_balance(balance, ctx)
     }
 
     public(friend) fun remove_liquidity<X>(pool: &mut Pool<X>, lp_coin: Coin<LP<X>>, out_min: u64,ctx: &mut TxContext): Coin<X> {
-                let lp_coin_value = coin::value(&lp_coin);
-                assert!(lp_coin_value > 0, ERR_ZERO_AMOUNT);
-                let (reserves, lp_supply) = get_reserves(pool);
+        let lp_coin_value = coin::value(&lp_coin);
+        assert!(lp_coin_value > 0, ERR_ZERO_AMOUNT);
+        let (reserves, lp_supply) = get_reserves(pool);
 
-                let coin_out = reserves * lp_coin_value / lp_supply;
+        let coin_out = reserves * lp_coin_value / lp_supply;
 
 
-                assert!(coin_out > 0, 1);
-                assert!(coin_out > out_min, 2);
+        assert!(coin_out > 0, 1);
+        assert!(coin_out > out_min, 2);
                 
-                balance::decrease_supply(&mut pool.lp_supply, coin::into_balance(lp_coin));
-                coin::take(&mut pool.reserves, coin_out, ctx)
+        balance::decrease_supply(&mut pool.lp_supply, coin::into_balance(lp_coin));
+        coin::take(&mut pool.reserves, coin_out, ctx)
 
     }
 
