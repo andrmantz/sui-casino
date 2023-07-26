@@ -42,7 +42,7 @@ module casino::implements {
 
     struct Ticket<phantom X> has key {
         id: UID,
-        chosen_number: u64,
+        bet_number: u64,
         epoch: u64,
         value: u64,
     }
@@ -193,7 +193,7 @@ module casino::implements {
         
         Ticket {
             id: object::new(ctx),
-            chosen_number: bet_number,
+            bet_number: bet_number,
             epoch: tx_context::epoch(ctx),
             value: coin_value
         }
@@ -202,29 +202,29 @@ module casino::implements {
     public(friend) fun redeem_bet<X>(casino: &mut Casino, ticket: Ticket<X>, ctx: &mut TxContext): Coin<X> {
         
         assert!(tx_context::epoch(ctx) > ticket.epoch, ERR_TOO_EARLY);
-        let bet_winnings = winnings<X>(casino, ticket);
+        let Ticket {id, bet_number, value, epoch} = ticket;
+        
+        let bet_winnings = winnings<X>(casino, bet_number, epoch, value);
         let pool = get_mut_pool<X>(casino);
 
-
+        object::delete(id);
         coin::take(&mut pool.reserves, bet_winnings, ctx)
 
     }
 
-    public fun winnings<X>(casino: &Casino, ticket: Ticket<X>): u64 {
-        let Ticket {id, chosen_number, value, epoch} = ticket;
+    public fun winnings<X>(casino: &Casino, bet_number: u64, epoch: u64, value: u64): u64 {
 
-        object::delete(id);
         let lucky_number = vec_map::get<u64, u64>(&casino.lucky_numbers,  &epoch);
 
-        get_multiplier(chosen_number, *lucky_number) * value
+        get_multiplier(bet_number, *lucky_number) * value
     }
 
-    fun get_multiplier(chosen_number: u64, lucky_number: u64): u64 {
+    fun get_multiplier(bet_number: u64, lucky_number: u64): u64 {
         let i = 0;
         while ( i < 7){
-            if (chosen_number % 10 != lucky_number % 10)
+            if (bet_number % 10 != lucky_number % 10)
                 break;
-            chosen_number = chosen_number / 10;
+            bet_number = bet_number / 10;
             lucky_number = lucky_number / 10;
             i = i + 1;
         };
@@ -252,6 +252,4 @@ module casino::implements {
         vec_map::insert(&mut casino.lucky_numbers, epoch, lucky_number);
         true
     }
-
-
 }
