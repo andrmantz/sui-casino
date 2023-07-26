@@ -23,6 +23,7 @@ module casino::implements {
     const ERR_POOL_EXISTS: u64 = 205;
     const ERR_TOO_EARLY: u64 = 206;
     const ERR_TOO_LATE: u64 = 207;
+    const ERR_LIQUIDITY_NOT_ENOUGH: u64 = 208;
 
 
 
@@ -151,8 +152,11 @@ module casino::implements {
         let (reserves, lp_supply) = get_reserves(pool);
                 
         let liquidity_added = if (lp_supply == 0){
-
-            coin_value
+            
+            // mint dead shares to not worry too much about inflation attacks
+            assert!(coin_value > MINUMUM_LIQUIDITY, ERR_LIQUIDITY_NOT_ENOUGH);
+            balance::increase_supply(&mut pool.lp_supply, MINUMUM_LIQUIDITY);
+            coin_value - MINUMUM_LIQUIDITY
         } else {
             coin_value * lp_supply / reserves
         };

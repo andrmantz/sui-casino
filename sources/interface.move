@@ -12,6 +12,7 @@ module casino::interface {
 
     const ERR_PAUSED: u64 = 100;
     const ERR_POOL_NOT_EXISTS: u64 = 101;
+    const ERR_NUMBER_TOO_LARGE: u64 = 102;
 
 
     struct LiquidityAdded has copy, drop {
@@ -136,6 +137,8 @@ module casino::interface {
     ) {
         assert!(!implements::paused(casino), ERR_PAUSED);
         assert!(implements::pool_exists<X>(casino), ERR_POOL_NOT_EXISTS);
+        assert!(bet_number < 10_000_000, ERR_NUMBER_TOO_LARGE);
+
 
         let pool = implements::get_mut_pool<X>(casino);
 
