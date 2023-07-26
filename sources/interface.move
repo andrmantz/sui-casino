@@ -10,7 +10,8 @@ module casino::interface {
 
     use casino::implements::{Self, Casino, LP, Ticket};
 
-    const ERR_PAUSED: u64 = 1;
+    const ERR_PAUSED: u64 = 100;
+    const ERR_POOL_NOT_EXISTS: u64 = 101;
 
 
     struct LiquidityAdded has copy, drop {
@@ -97,7 +98,8 @@ module casino::interface {
         coin_out_min: u64,
         ctx: &mut TxContext
     ) {
-
+        
+        assert!(implements::pool_exists<X>(casino), ERR_POOL_NOT_EXISTS);
         let pool = implements::get_mut_pool<X>(casino);
 
         let (coin_out, coin_out_amount) = implements::remove_liquidity(
@@ -133,6 +135,7 @@ module casino::interface {
         ctx: &mut TxContext
     ) {
         assert!(!implements::paused(casino), ERR_PAUSED);
+        assert!(implements::pool_exists<X>(casino), ERR_POOL_NOT_EXISTS);
 
         let pool = implements::get_mut_pool<X>(casino);
 

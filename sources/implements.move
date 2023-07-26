@@ -201,6 +201,7 @@ module casino::implements {
 
         let coin_value = coin::value(&coin_in);
         assert!(coin_value > 0, ERR_ZERO_AMOUNT);
+        
         balance::join(&mut pool.reserves, coin::into_balance(coin_in));
         
         (
