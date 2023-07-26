@@ -21,6 +21,7 @@ module casino::admin {
     }
 
     struct OracleAddressModified has copy,drop {
+        casino: ID,
         new_oracle: address
     }
 
@@ -60,6 +61,7 @@ module casino::admin {
         
         emit(
             OracleAddressModified {
+                casino: implements::casino_id(casino),
                 new_oracle
             }
         );
