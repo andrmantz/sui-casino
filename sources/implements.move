@@ -113,10 +113,10 @@ module casino::implements {
     public(friend) fun get_mut_pool<X>(
         casino: &mut Casino,
     ): &mut Pool<X> {
-        let lp_name = get_pool_name<X>();
-        let exists = bag::contains_with_type<String, Pool<X>>(&casino.pools, lp_name);
-        assert!(exists, ERR_POOL_NOT_EXISTS);
 
+        assert!(!pool_exists<X>(casino), ERR_POOL_EXISTS);
+
+        let lp_name = get_pool_name<X>();
         bag::borrow_mut<String, Pool<X>>(&mut casino.pools, lp_name)
     }
 
@@ -127,7 +127,6 @@ module casino::implements {
     public fun pool_exists<X>(casino: &Casino) : bool{
         let pool_name = get_pool_name<X>();
         bag::contains_with_type<String, Pool<X>>(&casino.pools, pool_name)
-
     }
 
     public(friend) fun create_pool<X>(casino: &mut Casino) {
