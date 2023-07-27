@@ -83,7 +83,7 @@ module casino::implements {
         object::uid_to_inner(&casino.id)    
     }
 
-    public fun paused(casino: &mut Casino) : bool {
+    public fun paused(casino: &Casino) : bool {
         casino.is_paused
     }
 
