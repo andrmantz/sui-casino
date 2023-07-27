@@ -1,13 +1,14 @@
-# SUI 2-sided gambling casino
+# SUI 2-side gambling casino
 
 ### DISCLAIMER
+
 The project was created for fun as a side hustle. The soundness of the protocol has not been proved, many risks have not been mitigated and currently it is both untested and unaudited. DO NOT USE AT A PRODUTION ENVIRONMENT.
 
 ### Description
 
-The project aims to provide a fun 2-sided gambling casino. On the one hand, there are the casino players, who can play at the lottery and earn coins based on the amount of numbers they guess correctly. On the other hand, there are the liquidity providers, who can provide their tokens and gain shares on single-asset vauls, which will be used to pay rewards.
+The project aims to provide a fun 2-side gambling casino. On the one hand, there are the casino players, who can play at the lottery and earn coins based on the amount of numbers they guess correctly. On the other hand, there are the liquidity providers, who can provide their tokens and gain shares on single-asset vauls, which will be used to pay rewards.
 
-#### What does 2-sided mean?
+#### What does 2-side mean?
 
 - Every time a casino player wins and earns coins, the vault's underlying token balance will decrease and LPs' shares are decreasing.
 - Every time a casino player loses, the vault's underlying token balance will increase and LPs' shares are increasing.
@@ -25,21 +26,22 @@ The current round time is one Sui epoch - 1 day at the time of writing. This mea
 #### Liquidity provider
 
 Liquidity providers can add their coins to existing vaults or create new ones and get shares over them. Their returns depend on the casino games, as they earn coins while gamblers lose and vice versa. The following functions are provided:
-- `add_liquidity<X>`: Add liquidity for `Coin<X>` in the relative vault and gain `Coin<LP<X>>` in return.
-- `remove_liquidity<X>`:  Remove liquidity, by sending `Coin<LP<X>>` to the vault and receiving `Coin<X>` in return.
 
+- `add_liquidity<X>`: Add liquidity for `Coin<X>` in the relative vault and gain `Coin<LP<X>>` in return.
+- `remove_liquidity<X>`: Remove liquidity, by sending `Coin<LP<X>>` to the vault and receiving `Coin<X>` in return.
 
 #### Casino player
 
 Casino players can bet any supported coin in the lottery. By supported coin we refer to any coin there's the respective vault in the casino.
 
-- `place_bet<X>`: Place a new bew of  `Coin<X>`. The winnings will be on the same coin as the bet. A `Ticket<X>` is transferred to the caller, which will be later used to redeem the bet.
+- `place_bet<X>`: Place a new bew of `Coin<X>`. The winnings will be on the same coin as the bet. A `Ticket<X>` is transferred to the caller, which will be later used to redeem the bet.
 - `redeem_bet<X>`: Send back the `Ticket` and get the winnings.
 - `cancel_bet<X>`: Can be used to cancel the bet early. Half of the input amount is returned.
 
 #### Admin
 
 Admin is responsible for the proper function of the smart contracts. In case the contract is ever deployed in production, this address should be a multisig, and even protected by timelock as it has great power. The functions that require admin authorization are the following:
+
 - `pause`: Pauses the contract in case of emergency. The only entry function that can be called while the contract is paused is the `remove_liquidity`, to mitigate centralization risks up to a certain level.
 - `unpause`: Resumes the contract.
 - `modify_admin`: Transfers the admin role to another address.
